@@ -1,14 +1,86 @@
 <html>
     <head>
         <title>Star Map</title>
-        <script type="text/javascript" src="index.js"></script>
         <script src="node_modules/d3/build/d3.js"></script>
-        <!--        <script src="node_modules/d3/node_modules/d3-geo/build/d3-geo.js"></script> -->
+        <script type="text/javascript" src="squaille-map.js"></script>
+        <style>
+            body {
+                display:flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction:column;
+            }
+            h1 {
+                position: absolute;
+                top:30px;
+                letter-spacing: 1.5em;
+                font-size: 1em;
+                text-transform: lowercase;
+                font-variant: small-caps;
+                font-weight: 100;
+                color: #bae6ff;
+                font-family: arial;
+                border-bottom: 1px solid #bae6ff;
+                margin: 20px 0px 50px 0px;
+                padding-bottom: 15px;
+                padding-left: 1.5em;
+            }
+            .background {
+                background-color : #152846;
+                fill : #152846;
+            }
+            #chart-container {
+                fill : #152846;
+            }
+            .graticule {
+                fill: none;
+                stroke: #777;
+                stroke-width: .5px;
+                stroke-opacity: .5;
+                opacity:1;
+                transition : opacity .8s ease-in-out;
+            }
+            .constellations-boundaries {
+                cursor:pointer;
+                opacity:0;
+            }
+            .constellations-stroke {
+                fill: #f9eed0;
+                opacity: 0.3;
+                transition : all .4s ease-in-out;
+            }
+            .constellations-stroke-focus {
+                fill: #fbda81;
+                opacity:1;
+            }
+            .constellations-boundaries {
+                opacity : 0;
+                transition : opacity .4s ease-in-out;
+
+            }
+            .constellations-boundaries-focus {
+                stroke: #fbda81;
+                opacity:1;
+            }
+            .constellations-name {
+                text-transform: capitalize;
+                font-variant: small-caps;
+                fill: #fff;
+                font-size: 3px;
+                font-weight:100;
+                font-family: arial;
+                opacity:0;
+                transition : all .4s ease-in-out;
+            }
+            .constellations-name-focus {
+                fill: #fbda81;
+            }
+        </style>
     </head>
-    <body>
-        <h1>
-            Star Map
-        </h1>
-        <div id="star-chart"></div>
+    <body class="background">
+        <h1>Star Map</h1>
+        <div id="star-chart">
+            <svg></svg>
+        </div>
     </body>
 </html>
