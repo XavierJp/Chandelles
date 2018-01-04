@@ -1,14 +1,21 @@
 {
-  "name": "d3-star-chart",
+  "name": "squaille-map",
   "version": "1.0.0",
-  "description": "",
+  "description": "Let's try to create a fancy star map",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "d3": "^4.10.0"
-  }
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-scripts": "1.0.17",
+    "d3": "^4.10.0",
+    "webpack": "^3.6.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "author": "Xavier",
+  "license": "ISC"
 }
