@@ -2,10 +2,11 @@
 This is squaille map.
 
 # Todo
+ (x) 
 
 ## To fix
 
-- constellation boundaries to be cleaned
+- (x) massive data cleaning on constellation boundaries
 
 ## zoom + drag/drop
 
