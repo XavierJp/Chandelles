@@ -1,8 +1,9 @@
 body {
     align-items: center;
     flex-direction:column;
-    font-family: system-ui;
+    font-family: -apple-system, BlinkMacSystemFont,'Helvetica Neue','Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',sans-serif;
     margin:0;
+    user-select: none;
 }
 .background {
     background-color : #152846;
@@ -14,15 +15,28 @@ body {
 
 #recenter-button {
     position:absolute;
-    top: 35px;
-    left:35px;
+    bottom: 35px;
+    right:35px;
     color: rgba(255,255,255, 0.6);
     font-size: 40px;
-    cursor:pointer;
 }
 #recenter-button:hover {
     color: rgba(255,255,255, 0.8);
 }
+#location {
+    position:absolute;
+    color: rgba(255,255,255, 0.7);
+    font-style: italic;
+    font-size:1.1em;
+    top:45px;
+    right:45px;
+}
+
+.pointer {
+    cursor:pointer;
+}
+
+/** D3 style **/
 
 #chart-container {
     fill : #152846;
@@ -36,7 +50,6 @@ body {
     transition : opacity .8s ease-in-out;
 }
 .constellations-boundaries {
-    cursor:pointer;
     opacity:0;
 }
 .constellations-stroke {
@@ -64,12 +77,16 @@ body {
     font-size: 20px;
     font-weight:100;
     opacity:0;
-    cursor:pointer;
 }
 .constellations-name-focus {
     fill: #fbda81;
 }
 .star-name {
-    fill:red;
+    fill:rgba(240,240,255,0.8);
+    font-style: italic;
     font-weight:100;
+    font-size: 0.8em;
+}
+.star-name:hover{
+    fill:rgba(240,240,255,0.9);
 }

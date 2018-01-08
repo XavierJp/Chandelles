@@ -3,6 +3,7 @@ import InfoPane from './components/infoPane/infoPane'
 import SearchBar from './components/searchBar/searchBar'
 
 import d3ChartFactory from './d3Chart/d3Chart';
+import xhrFactory from './utils/xhr';
 import dataFactory from './resources/data';
 
 
@@ -13,11 +14,18 @@ import dataFactory from './resources/data';
 * BUT :
 * I would rather have all the chart logic in a single js file:
 * - If needed it will be easy to dissociate the d3 chart from the React app.
-* - It is the way I use D3 best
 * - Not even sure React is faster at DOM manipulation
 *
-* REACT does not even handle the data. IT si only an interface layer. It s the V in MVC
+* REACT does not even handle the data. It si only an UI layer. It s the V in MVC
 */
+
+const FETCHING = 'fetching data from wikipedia...';
+const ERROR = 'Cannot find element on wikipedia.';
+const WIKI_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+
+/**
+* APP is the main react component and the only one with a state
+**/
 
 class App extends Component {
     constructor() {
@@ -26,61 +34,102 @@ class App extends Component {
         this.data = dataFactory();
 
         this.state = {
-            selectedConstellation : { id: undefined, name:undefined },
-            chart: undefined
+            selectedConstellation : { id: undefined },
+            chart: undefined,
+            chartCentered : true,
+            content : FETCHING,
+            searchResults : []
         };
+
+        this.searchElement = this.searchElement.bind(this);
+    }
+
+    // retreive data from wikipedia - constellation only so far
+    fetchWiki (constellation) {
+        if (constellation.id === undefined) {
+            this.setState({content : FETCHING});
+            return;
+        }
+
+        const wikiXhr = xhrFactory();
+        const url = WIKI_URL+constellation.name+'_(constellation)';
+
+        wikiXhr.init(url)
+            .send()
+            .then(
+                (response)=>this.setState({content : JSON.parse(response).extract}),
+                (error)=> this.setState({content : ERROR})
+            )
+    }
+
+    // search element (based on its id)
+    searchElement(elemId) {
+        this.setState({searchResults : elemId ? this.data.search(elemId) : []});
     }
 
     componentDidMount() {
+
+        // define actions to be triggered on Events
         const chartOpts = {
             onConstellationSelected : (id)=> {
-                this.setState({selectedConstellation:this.data.getSkyElementById(id)})
+                const cons = this.data.getSkyElementById(id);
+                this.setState(
+                    {selectedConstellation:cons},
+                    ()=>this.fetchWiki(cons)
+                );
             },
+            onMove : () => {
+                this.setState({chartCentered:this.state.chart.isCentered()})
+            }
         }
 
-        this.setState({chart:d3ChartFactory('#chart-container', chartOpts)},
+        // draw chart
+        this.setState(
+            {chart:d3ChartFactory('#chart-container', chartOpts)},
             ()=>{
                 this.state.chart.draw(this.state.chartState);
-            });
-
-        /**
-            chart exposes several methods :
-            Draw(hook, initialState)
-            SelectStar(starId)
-            SelectConstellation(constellationId)
-            Move(lat,long)
-            Zoom(in/out, lat, long)
-            GetState()
-
-            AND takes several input :
-            onStarSelected()
-            onConstellationSelected()
-            onZoom()
-            onMove()
-        **/
+            }
+        );
     }
 
     render() {
         return (
             <div className="background">
-                { this.state.chart &&
-                    <Recenter reCenter={()=>this.state.chart.selectConstellation()}/>
-                }
-                <SearchBar select={(id)=>this.state.chart.selectConstellation(id)}/>
-                <div id="chart-container"></div>
-                { this.state.selectedConstellation && this.state.chart &&
+                <SearchBar
+                    select={(id)=>this.state.chart.selectConstellation(id)}
+                    search={this.searchElement}
+                    results={this.state.searchResults}/>
+                <ChartContainer />
+                { this.state.selectedConstellation.id && this.state.chart &&
                     <InfoPane
                         selectedItem={this.state.selectedConstellation}
-                        deSelect={()=>this.state.chart.selectConstellation()}/>
+                        deSelect={()=>this.state.chart.selectConstellation()}
+                        content={this.state.content}/>
+                }
+                <Location />
+                { this.state.chart &&  !this.state.chartCentered &&
+                    <Recenter reCenter={()=>this.state.chart.reCenter()}/>
                 }
             </div>
             );
     }
 }
 
+const ChartContainer = () => {
+    return (
+        <div id="chart-container"></div>
+    )
+}
+
 const Recenter = (props) => {
     return (
-        <div id="recenter-button" onClick={props.reCenter}>&#9737;</div>
+        <div id="recenter-button" className="pointer" onClick={props.reCenter}>&#9737;</div>
+    )
+}
+
+const Location = () => {
+    return (
+        <div id="location">Projection : Paris, France</div>
     )
 }
 

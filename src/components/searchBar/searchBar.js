@@ -1,7 +1,6 @@
 //import d3Chart from './d3Chart';
 import React, { Component } from 'react';
 import './searchBar.css';
-import searchFactory from './searchCore';
 
 /**
 * Search bar
@@ -12,40 +11,32 @@ class SearchBar extends Component {
         super(props);
 
         this.textInput = '';
-
-        this.state = {
-            searchEngine : searchFactory(),
-            searchResults : [],
-            inputText:''
-        };
-
-        this.updateSearch = this.updateSearch.bind(this);
         this.selectAndClearInput = this.selectAndClearInput.bind(this);
-    }
-
-    // work on component will update and a better handle on ref vs onChange
-    updateSearch() {
-        const val = this.textInput.value;
-        this.setState({
-            searchResults : val ? this.state.searchEngine.search(val) : []
-        });
+        this.clearInput = this.clearInput.bind(this);
     }
 
     selectAndClearInput(id) {
-        this.textInput.value = '';
         this.props.select(id);
-        this.updateSearch();
+        this.clearInput();
+    }
+
+    clearInput() {
+        this.textInput.value = '';
+        this.props.search();
     }
 
     render() {
+        const { results, search } = this.props;
         return (
             <div id="search-bar">
                 <input
                     ref={(input) => this.textInput = input }
                     type="text"
                     placeholder="Search a constellation"
-                    onChange={()=>this.updateSearch()}/>
-                <SearchResultContainer select={this.selectAndClearInput} results={this.state.searchResults}/>
+                    onChange={()=>search(this.textInput.value)}/>
+                { results.length > 0 &&
+                    <SearchResultContainer select={this.selectAndClearInput} results={results}/>
+                }
             </div>
         );
     }
@@ -65,7 +56,7 @@ const SearchResultContainer = (props) => {
 }
 
 const SearchResultItem = (props) => {
-    return <div className="result-item" onClick={props.select}>{props.result.descr}</div>
+    return <div className="result-item pointer" onClick={props.select}>{props.result.descr}</div>
 }
 
 export default SearchBar;
