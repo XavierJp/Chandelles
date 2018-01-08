@@ -3,6 +3,7 @@ import InfoPane from './components/infoPane/infoPane'
 import SearchBar from './components/searchBar/searchBar'
 
 import d3ChartFactory from './d3Chart/d3Chart';
+import dataFactory from './resources/data';
 
 
 /** Chart wrapper ensure the smooth binding between D3 and React
@@ -22,22 +23,19 @@ class App extends Component {
     constructor() {
         super();
 
+        this.data = dataFactory();
+
         this.state = {
-            selectedConstellation : undefined,
+            selectedConstellation : { id: undefined, name:undefined },
             chart: undefined
         };
     }
 
     componentDidMount() {
-        const chartIntialState = {
-                selectedConstellation : undefined,
-                selectedStar : undefined,
-                zoom : 1,
-                position : [0,0],
-            };
-
         const chartOpts = {
-            onConstellationSelected : (id)=> this.setState({selectedConstellation:id}),
+            onConstellationSelected : (id)=> {
+                this.setState({selectedConstellation:this.data.getSkyElementById(id)})
+            },
         }
 
         this.setState({chart:d3ChartFactory('#chart-container', chartOpts)},
@@ -65,12 +63,25 @@ class App extends Component {
     render() {
         return (
             <div className="background">
+                { this.state.chart &&
+                    <Recenter reCenter={()=>this.state.chart.selectConstellation()}/>
+                }
                 <SearchBar select={(id)=>this.state.chart.selectConstellation(id)}/>
                 <div id="chart-container"></div>
-                <InfoPane selectedItem={this.state.selectedConstellation} />
+                { this.state.selectedConstellation && this.state.chart &&
+                    <InfoPane
+                        selectedItem={this.state.selectedConstellation}
+                        deSelect={()=>this.state.chart.selectConstellation()}/>
+                }
             </div>
             );
     }
+}
+
+const Recenter = (props) => {
+    return (
+        <div id="recenter-button" onClick={props.reCenter}>&#9737;</div>
+    )
 }
 
 export default App;

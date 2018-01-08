@@ -1,12 +1,14 @@
-import { constellationsInfos } from '../../resources/data';
+import dataFactory from '../../resources/data';
 
 /** basic implem of the search engine.
 * Entirely text based
 * Constellations only for now
 **/
+const data = dataFactory();
 
 const searchFactory = () => {
-    const constellations = constellationsInfos.features.map(cons=> {
+
+    const constellations = data.constellations.infos.features.map(cons=> {
         return {
             id : cons.id,
             descr: cons.properties.name

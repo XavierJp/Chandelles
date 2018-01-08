@@ -2,7 +2,7 @@
     /* display: initial; */
     display: block;
     position: absolute;
-    right: 70px;
+    right: 50px;
     font-size: 0.9em;
     font-weight: 100;
 
@@ -21,10 +21,15 @@
     font-weight: 100;
 }
 
+#info-pane-kill {
+    float:right;
+    font-style: initial;
+    cursor:pointer;
+}
+
 #info-pane-content {
     background: rgba(0,0,0, 0.6);
-
-    max-width: 300px;
+    max-width: 280px;
     padding:25px 20px;
     border-bottom-left-radius: 7px;
     border-bottom-right-radius: 7px;

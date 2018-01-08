@@ -11,6 +11,19 @@ body {
     justify-content: center;
     align-items:center;
 }
+
+#recenter-button {
+    position:absolute;
+    top: 35px;
+    left:35px;
+    color: rgba(255,255,255, 0.6);
+    font-size: 40px;
+    cursor:pointer;
+}
+#recenter-button:hover {
+    color: rgba(255,255,255, 0.8);
+}
+
 #chart-container {
     fill : #152846;
 }
@@ -48,10 +61,10 @@ body {
     text-transform: capitalize;
     font-variant: small-caps;
     fill: #fff;
-    font-size: 3px;
+    font-size: 20px;
     font-weight:100;
     opacity:0;
-    transition : all .4s ease-in-out;
+    cursor:pointer;
 }
 .constellations-name-focus {
     fill: #fbda81;

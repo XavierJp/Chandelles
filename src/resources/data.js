@@ -9,42 +9,38 @@ const stars = {"type":"FeatureCollection","features":[{"type":"Feature","id":88,
 
 const dataFactory = () => {
     const self = {
+        constellations : {
+            strokes : constellationsStrokes,
+            infos : constellationsInfos,
+            boundaries : constellationsBoundaries
+        },
         stars : stars,
-        getConstellationById: (id) => {},
+        getConstellationById: (id) => {
+            const constInfos = constellationsInfos.features.find(cons => cons.id === id);
+            const constBoundaries = constellationsBoundaries.features.find(cons => cons.id === id);
+            return {
+                id : constInfos.id,
+                name : constInfos.properties.name,
+                boundaries : constBoundaries
+            }
+        },
         getStarById: (id) => {},
-        getSkyElementById : (id) => {} // experimental but star use number when const use string, must return an object type star vs const
+        getSkyElementById : (id) => {
+            if(typeof id === 'string') {
+                return self.getConstellationById(id);
+            }
+            if(typeof id === 'number') {
+                return self.getStarById(id);
+            }
+            if(id=== undefined)
+                return {
+                    id : undefined
+                }
+            throw (`Cannot find element id : ${id}`);
+        }
     }
 
-    const aggregatedConstellations = {}
-
-    constellationsInfos.features.map(consInfos => {
-        const id = consInfos.id;
-        aggregatedConstellations[id] = { infos : consInfos };
-    });
-
-    constellationsStrokes.features.map(consStrokes => {
-        const id = consStrokes.id;
-        if(self.constellations[id])
-            aggregatedConstellations[id].strokes = consStrokes;
-        else
-            console.error('could not find infos for constellation : '+consStrokes);
-    })
-
-    constellationsBoundaries.features.map(consBoundaries => {
-        const id = consBoundaries.id;
-
-        // should exclude constellation boundaries out of the box
-
-        if(self.constellations[id])
-            aggregatedConstellations[id].boundaries = consBoundaries;
-        else
-            console.error('could not find boundaries for constellation : '+consBoundaries);
-    })
-
-    // turn into an array
-    //self.constellations = aggregatedConstellations.map(c=> c)
-
-    return self;
+    return self
 }
 
 export default dataFactory;

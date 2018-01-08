@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import data from '../resources/data';
+import dataFactory from '../resources/data';
 
 /**
  * CONSTANTES
@@ -12,6 +12,8 @@ const constants = {
 /**
  * The state returns a sate brand new state ibject featuring the sky chart position on canvas
  */
+
+const data = dataFactory();
 
 const stateFactory = () => {
     const self = {
@@ -72,25 +74,8 @@ const skyFactory = (hook) => {
         };
         return state;
     }
-    sky.selectConstellation = (newConst) => {
-        if (newConst === undefined){
-            sky.highlightConstellation(sky.state.selectedConstellation, false);
-            sky.displayConstellationStars(sky.state.selectedConstellation,false);
-            sky.state.selectedConstellation = undefined;
-        } else {
-            const currentConst = sky.state.selectedConstellation;
-
-            if (currentConst)
-                sky.highlightConstellation(currentConst, false);
-
-            sky.state.selectedConstellation = newConst;
-            sky.highlightConstellation(newConst, true);
-            sky.displayConstellationStars(newConst, true);
-        }
-    }
     sky.displayConstellationStars = (constName, show) => {
         const selector = '.star-constellation-name-'+constName;
-        console.log(sky.getScale())
         sky.scaleFonts(selector, 20);
         d3.selectAll(selector)
             .transition().delay(show ? constants.transitions.constellations : 0)
@@ -137,32 +122,84 @@ const skyFactory = (hook) => {
                 .attr('transform', transformStr);
         }
 
-        sky.scaleFonts('.constellations-name', 20);
-        // update stars name visibility
-        if(Number(newState.scale) % 1 < 0.3 || forceCanvasUpdate)
-        {
-            /** should be a method to hide / show brightest stars in the display area
-            sky.mapLayer.selectAll(".star-name")
-                .style('font-size', 0.15*10/sky.getScale()+'em')
-                .style('display', (d) => {
-                    return Number(d.properties.mag) < sky.getScale() ? 'initial' : 'none';
-                });
-            **/
-        }
-
         // display graticule if canvas is centered
         sky.mapLayer.selectAll('.graticule')
             .style('opacity', sky.isCentered() ? 1 : 0);
     };
-    sky.highlightConstellation = (id, isHighlighted) => {
+    sky.highlightConstellation = (id, isHighlighted, useDelay=false) => {
         d3.select('#constellations-stroke-'+id)
             .classed('constellations-stroke-focus', isHighlighted);
-        d3.select('#constellations-name-'+id)
-            .style('opacity', isHighlighted ? 1 : 0)
-            .style('display', isHighlighted ? 'block' : 'none')
-            .classed('constellations-name-focus', isHighlighted);
         d3.select('#constellations-boundaries-'+id)
             .classed('constellations-boundaries-focus', isHighlighted);
+
+        const nameSelector = '#constellations-name-'+id;
+        const constName = d3.select(nameSelector);
+
+        constName.classed('constellations-name-focus', isHighlighted)
+            .style('display', isHighlighted ? 'block' : 'none')
+            .style('opacity', 0)
+
+        sky.scaleFonts(nameSelector, 30);
+
+        if (isHighlighted)
+            constName.transition().delay(useDelay ? 0 : constants.transitions.constellations)
+            .style('opacity',  1);
+    };
+
+    sky.focusOnConstellation = (constellationId) => {
+        if (constellationId=== undefined){
+            sky.highlightConstellation(sky.state.selectedConstellation, false);
+            sky.displayConstellationStars(sky.state.selectedConstellation,false);
+            sky.state.selectedConstellation = undefined;
+        } else {
+            const currentConst = sky.state.selectedConstellation;
+
+            if (currentConst) {
+                sky.displayConstellationStars(currentConst,false);
+                sky.highlightConstellation(currentConst, false);
+            }
+
+            sky.state.selectedConstellation = constellationId;
+            sky.highlightConstellation(constellationId, true);
+            sky.displayConstellationStars(constellationId, true);
+        }
+    };
+
+    sky.zoomOnConstellation = (constellationBoundaries) => {
+        if (constellationBoundaries === undefined || sky.state.centered === constellationBoundaries)
+        {
+            sky.reCenter();
+            return;
+        }
+
+        const centroid = sky.path.centroid(constellationBoundaries);
+        const bnds = sky.path.bounds(constellationBoundaries)
+        const targetScale = Math.min(sky.width*0.5/(bnds[1][0] - bnds[0][0]), sky.height*0.8/(bnds[1][1] - bnds[0][1]));
+        sky.state.centered = constellationBoundaries;
+
+        const from = sky.canvasStateFactory([0,0]);
+        const to = sky.canvasStateFactory(
+                [
+                    sky.width/(sky.state.centered ? 3 : 2) - centroid[0]*targetScale,
+                    sky.height/(2) - centroid[1]*targetScale
+                ],
+                targetScale);
+
+        sky.transformCanvas(from, to, constants.transitions.constellations);
+    };
+
+    sky.reCenter = () => {
+        sky.state.centered = undefined;
+
+        const from = sky.canvasStateFactory([0,0]);
+        const to = sky.canvasStateFactory(
+                [
+                    sky.width/2 - sky.width / 2,
+                    sky.height/2 - sky.height / 2
+                ],
+                1);
+
+        sky.transformCanvas(from, to, constants.transitions.constellations);
     }
 
     return sky;
@@ -179,15 +216,16 @@ const d3ChartFactory = (hook, opts) => {
         onZoom : opts.onZoom ? opts.onMove : () => {},
         onMove : opts.onMove ? opts.onMove : () => {},
         // chart manipulation
+        isCentered:() => sky.state.isCentered,
         draw : (state) => {
 
             const dragStart = () => {
-                sky.selectConstellation();
                 sky.state.dragCoords.x = d3.event.x - sky.state.coords.x;
                 sky.state.dragCoords.y = d3.event.y - sky.state.coords.y;
             }
 
             const dragDrag = () => {
+
                 const oldState = {
                     coords:{
                         x:sky.state.dragCoords.x,
@@ -225,22 +263,19 @@ const d3ChartFactory = (hook, opts) => {
 
             // Draw each constellation as a path
             sky.mapLayer.selectAll('.constellations-stroke')
-            .data(data.features)
+            .data(data.constellations.strokes.features)
             .enter().append('path')
             .attr("class", "constellations-stroke")
             .attr("id", (d) =>"constellations-stroke-"+d.id)
             .attr('d', sky.path)
             .attr('vector-effect', 'non-scaling-stroke')
             .style('stroke', 'rgba(110,200,255,0.45)')
-            .style('fill', 'none')
-            .on('click', (d)=> {
-                d3Chart.selectConstellation(d.id);
-            });
+            .style('fill', 'none');
 
 
             // invisible boundaries used for click
             sky.mapLayer.selectAll('.constellations-boundaries')
-            .data(constellationsBoundaries.features)
+            .data(data.constellations.boundaries.features)
             .enter().append('path')
             .attr("class", "constellations-boundaries")
             .attr("id", (d) =>"constellations-boundaries-"+d.id)
@@ -260,27 +295,38 @@ const d3ChartFactory = (hook, opts) => {
             })
             .on('mouseover', function(d){
                 if(d.id !== sky.state.selectedConstellation)
-                    sky.highlightConstellation(d.id, true);
+                    sky.highlightConstellation(d.id, true, true);
             })
             .on('mouseleave', function(d){
                 if(d.id !== sky.state.selectedConstellation)
-                    sky.highlightConstellation(d.id, false);
+                    sky.highlightConstellation(d.id, false, true);
             })
 
             // add names
             sky.mapLayer.selectAll(".constellations-name")
-            .data(constellationsInfos.features)
+            .data(data.constellations.infos.features)
             .enter().append("text")
             .attr('vector-effect', 'non-scaling-stroke')
             .attr("x", (d) => { return sky.projection(d.geometry.coordinates)[0]; })
             .attr("y", (d) => { return sky.projection(d.geometry.coordinates)[1]; })
             .text(function(d) { return d.properties.name; })
             .attr("class", "constellations-name")
-            .attr("id", (d)=>"constellations-name-"+d.id);
+            .attr("id", (d)=>"constellations-name-"+d.id)
+                       .on('click', (d)=> {
+                d3Chart.selectConstellation(d.id);
+            })
+            .on('mouseover', function(d){
+                if(d.id !== sky.state.selectedConstellation)
+                    sky.highlightConstellation(d.id, true, true);
+            })
+            .on('mouseleave', function(d){
+                if(d.id !== sky.state.selectedConstellation)
+                    sky.highlightConstellation(d.id, false, true);
+            })
 
             // add stars
             sky.mapLayer.selectAll(".stars")
-            .data(stars.features).enter()
+            .data(data.stars.features).enter()
             .append("circle")
             .attr("cx", (d) => { return sky.projection(d.geometry.coordinates)[0]; })
             .attr("cy", (d) => { return sky.projection(d.geometry.coordinates)[1]; })
@@ -289,7 +335,7 @@ const d3ChartFactory = (hook, opts) => {
             .attr('class', 'stars')
 
             sky.mapLayer.selectAll(".star-name")
-            .data(stars.features)
+            .data(data.stars.features)
             .enter().append("text")
             .attr('vector-effect', 'non-scaling-stroke')
             .attr("x", (d) => { return sky.projection(d.geometry.coordinates)[0]+1; })
@@ -300,6 +346,7 @@ const d3ChartFactory = (hook, opts) => {
             .attr("id", (d)=>"star-name-"+d.id);
         },
         zoom : (scale,lat,lng) => {
+            /** zoom currently deactivated
             if(d3.event.sourceEvent.type === "wheel") {
                 const targetScaleRatio = d3.event.sourceEvent.deltaY > 0 ? 1.01 : 0.99;
                 const targetScale = sky.getScale() * targetScaleRatio;
@@ -311,45 +358,26 @@ const d3ChartFactory = (hook, opts) => {
 
                 sky.transformCanvas(from,to,0, false);
             }
+            **/
         },
         move : (lat, lng) => {},
-        selectConstellation : (constellationId) => {
-            const constellation = constellationsBoundaries.features.find(c=>c.id === constellationId);
+        selectConstellation : (constellationId, zoomIn=true) => {
+            let id = undefined;
+            if(constellationId === sky.state.selectedConstellation || constellationId === undefined)
+            {
+                if (zoomIn)
+                    sky.reCenter();
+            } else {
+                const constellation = data.getSkyElementById(constellationId);
 
-            let x, y;
-            let targetScale = sky.state.scale;
-            let selectedConstellation = undefined;
+                if(constellation.id && zoomIn)
+                    sky.zoomOnConstellation(constellation.boundaries);
 
-            // Compute centroid of the selected path
-            if (constellation && sky.state.centered !== constellation) {
-                const centroid = sky.path.centroid(constellation);
-                x = centroid[0];
-                y = centroid[1];
-
-                let bnds = sky.path.bounds(constellation)
-                targetScale = Math.min(sky.width*0.5/(bnds[1][0] - bnds[0][0]), sky.height*0.8/(bnds[1][1] - bnds[0][1]));
-                sky.state.centered = constellation;
-                selectedConstellation = constellation.id;
-            } else { // back to initial
-
-                x = sky.width / 2;
-                y = sky.height / 2;
-                targetScale = 1;
-                sky.state.centered = undefined;
+                id = constellation.id;
             }
 
-            const from = sky.canvasStateFactory([0,0]);
-            const to = sky.canvasStateFactory(
-                    [
-                        sky.width/(sky.state.centered ? 3 : 2) - x*targetScale,
-                        sky.height/(2) - y*targetScale
-                    ],
-                    targetScale);
-
-            sky.transformCanvas(from, to, constants.transitions.constellations);
-            sky.selectConstellation(selectedConstellation);
-
-            d3Chart.onConstellationSelected(constellationId);
+            sky.focusOnConstellation(id);
+            d3Chart.onConstellationSelected(id);
         },
         selectStar : (starId) => {},
     }

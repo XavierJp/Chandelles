@@ -43,7 +43,7 @@ class SearchBar extends Component {
                 <input
                     ref={(input) => this.textInput = input }
                     type="text"
-                    placeholder="Search a constellation or star"
+                    placeholder="Search a constellation"
                     onChange={()=>this.updateSearch()}/>
                 <SearchResultContainer select={this.selectAndClearInput} results={this.state.searchResults}/>
             </div>
