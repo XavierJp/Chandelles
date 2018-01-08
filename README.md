@@ -1,4 +1,4 @@
-# Kindle-the-stars
+# Kindle-the-stars :sparkles:
 I love stars and constellations. Here is my attempt at making a simple sky map with wikipedia contextual links.
 The map is initially centered on Paris, France.
 
@@ -9,7 +9,7 @@ It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-c
   - some constellations cannot be selected (:fire: major blocker :fire:)
   - Some stars names seem to be duplicated
 - stars name ovelap
-- stars lat, lng, are currently flipped ! every coords should undergo a mirror translation (:fire: major blocker :fire:)
+- stars lat, lng, are currently flipped ! every coords should undergo a mirror translation
 
 ## What it cannot do (yet)
 - focus & articles on stars **(soon)**
