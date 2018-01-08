@@ -2,7 +2,8 @@
 I love stars and constellations. Here is an attempt at making a simple sky map with wikipedia contextual links.
 The map is initially centered on Paris, France.
 
-It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-celestial)
+This project was heavily inspired by [d3-celestial project from Ofrohn.](http://ofrohn.github.io/)
+Data reuses [d3-celestial data.](https://github.com/ofrohn/d3-celestial)
 
 ## Known issues
 - data still need a huge clean.
