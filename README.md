@@ -6,11 +6,18 @@ It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-c
 
 ## Known issues
 - data still need a huge clean.
+  - some constellations cannot be selected
+  - Some stars name seem to be duplicated
+- stars name ovelap
 
-## What it can't do (yet)
+## What it cannot do (yet)
 - focus & articles on stars **(soon)**
+- search stars **(soon)**
+- helper (for stargazing)
+- mobile version
+- red filter (for stargazing)
 
-## Architecture
+# Architecture
 The code is split in two main parts :
 - a react app that handle 
 - a d3 chart that plot the stars and constellations.
