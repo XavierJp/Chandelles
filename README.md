@@ -1,4 +1,4 @@
-# Squaille map
+# Kindled-stars
 Hi. I love stars and constellations. Here is my attempt at making a simple sky map linked with wikipedia.
 The map is initially centered on Paris, France.
 
