@@ -1,64 +1,22 @@
 # Squaille map
-This is squaille map.
+Hi. I love stars and constellations. Here is my attempt at making a simple sky map linked with wikipedia.
+The map is initially centered on Paris, France.
 
-# Todo
- (x) 
+It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-celestial)
 
-## To fix
+## Known issues
+- data still need a huge clean.
 
-- (x) massive data cleaning on constellation boundaries
+## What it can't do (yet)
+- focus & articles on stars **(soon)**
 
-## zoom + drag/drop
+## Architecture
+The code is split in two main parts :
+- a react app that handle 
+- a d3 chart that plot the stars and constellations.
 
-- scroll controlled
+The d3Chart could be esaily split from react and integrated with any other front end framework.
 
-- on drag / drop -> move the map
-
-## stars names
-
-- depending on zoom level + magnitude
-
-- on constellation click -> stars name display
-
-- stars name must not cover constellation
-
-- make star name size constant
-
-## star selection
-
-- on select change star color
-
-- on select change summary
-
-## On click on constellation
-
-- left panel or floating panel with wikipedia summary
-
--> need for a state containing state
-
-## on constellations hover
-
-- name and boundaries
-
-## pane
-
--> uses wikipedia summary to display constaellation (bla_(constellation)) and stars info
-
-
-## limits
-
-- add global boundaries
-
-- externalize data
-
--
-
-
-## Define the API entry point:
-SelectStar(starId)
-SelectConstellation(constellationId)
-Move(lat,long)
-Zoom(in/out, lat, long)
 
 
 
