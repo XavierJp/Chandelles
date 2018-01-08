@@ -7,7 +7,7 @@ It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-c
 ## Known issues
 - data still need a huge clean.
   - some constellations cannot be selected (:fire: major blocker :fire:)
-  - Some stars names seem to be duplicated
+  - some stars names seem to be duplicated
 - stars name ovelap
 - stars lat, lng, are currently flipped ! every coords should undergo a mirror translation
 
