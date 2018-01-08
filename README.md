@@ -17,7 +17,23 @@ The code is split in two main parts :
 
 The d3Chart could be esaily split from react and integrated with any other front end framework.
 
+D3Chart exposes the following API : 
 
+```
+draw(hook, initialState)
+selectStar(starId)
+selectConstellation(constellationId)
+move(lat,long)
+zoom(in/out, lat, long)
+```
+
+And has several lifetime cycle events : 
+```
+onStarSelected()
+onConstellationSelected()
+onZoom()
+onMove()
+```
 
 
 
