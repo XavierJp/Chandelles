@@ -1,12 +1,12 @@
 # Kindle-the-stars :sparkles:
-I love stars and constellations. Here is my attempt at making a simple sky map with wikipedia contextual links.
+I love stars and constellations. Here is an attempt at making a simple sky map with wikipedia contextual links.
 The map is initially centered on Paris, France.
 
 It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-celestial)
 
 ## Known issues
 - data still need a huge clean.
-  - some constellations cannot be selected (:fire: major blocker :fire:)
+  - some constellations cannot be selected. This is a major blocker :fire:
   - some stars names seem to be duplicated
 - stars name ovelap
 - stars lat, lng, are currently flipped ! every coords should undergo a mirror translation
@@ -19,11 +19,11 @@ It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-c
 - red filter (for stargazing)
 
 # Architecture
-The code is split in two main parts :
+The code contains two main parts :
 - a react app that handle 
-- a d3 chart that plot the stars and constellations.
+- a d3Chart that plots the stars and constellations.
 
-The d3Chart could be esaily split from react and integrated with any other front end framework.
+The d3Chart could easily be splitted from react and integrated with any other front end framework, or vanilla js.
 
 D3Chart exposes the following API : 
 
