@@ -9,6 +9,7 @@ It is based on d3-celestial data available [here](https://github.com/ofrohn/d3-c
   - some constellations cannot be selected
   - Some stars names seem to be duplicated
 - stars name ovelap
+- stars lat, lng, are currently flipped ! every coords should undergo a mirror translation
 
 ## What it cannot do (yet)
 - focus & articles on stars **(soon)**
