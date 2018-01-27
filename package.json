@@ -5,10 +5,10 @@
   "main": "index.js",
   "homepage": "https://XavierJp.github.io/kindled-stars",
   "dependencies": {
+    "d3": "^4.10.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.0.17",
-    "d3": "^4.10.0",
     "webpack": "^3.6.0"
   },
   "scripts": {
@@ -16,11 +16,18 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "deploy" : "npm run build&&gh-pages -d build"
+    "deploy": "npm run build&&gh-pages -d build"
   },
   "author": "Xavier",
   "license": "ISC",
   "devDependencies": {
-    "gh-pages": "^1.1.0"
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.5.1",
+    "flow-bin": "^0.63.1",
+    "gh-pages": "^1.1.0",
+    "stylelint-config-recommended": "^2.0.1"
   }
 }
