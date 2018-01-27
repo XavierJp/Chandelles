@@ -1,92 +1,90 @@
 body {
-    align-items: center;
-    flex-direction:column;
-    font-family: -apple-system, BlinkMacSystemFont,'Helvetica Neue','Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',sans-serif;
-    margin:0;
-    user-select: none;
+  align-items: center;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    sans-serif;
+  margin: 0;
+  user-select: none;
 }
 .background {
-    background-color : #152846;
-    fill : #152846;
-    display: flex;
-    justify-content: center;
-    align-items:center;
+  background-color: #152846;
+  fill: #152846;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #recenter-button {
-    position:absolute;
-    bottom: 35px;
-    right:35px;
-    color: rgba(255,255,255, 0.6);
-    font-size: 40px;
+  position: absolute;
+  bottom: 35px;
+  right: 35px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 40px;
 }
 #recenter-button:hover {
-    color: rgba(255,255,255, 0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 #location {
-    position:absolute;
-    color: rgba(255,255,255, 0.7);
-    font-style: italic;
-    font-size:1.1em;
-    top:45px;
-    right:45px;
+  position: absolute;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+  font-size: 1.1em;
+  top: 45px;
+  right: 45px;
 }
 
 .pointer {
-    cursor:pointer;
+  cursor: pointer;
 }
 
 /** D3 style **/
 
 #chart-container {
-    fill : #152846;
+  fill: #152846;
 }
 .graticule {
-    fill: none;
-    stroke: #777;
-    stroke-width: .5px;
-    stroke-opacity: .5;
-    opacity:1;
-    transition : opacity .8s ease-in-out;
-}
-.constellations-boundaries {
-    opacity:0;
+  fill: none;
+  stroke: #777;
+  stroke-width: 0.5px;
+  stroke-opacity: 0.5;
+  opacity: 1;
+  transition: opacity 0.8s ease-in-out;
 }
 .constellations-stroke {
-    fill: #f9eed0;
-    opacity: 0.3;
-    transition : all .4s ease-in-out;
+  fill: #f9eed0;
+  opacity: 0.3;
+  transition: all 0.4s ease-in-out;
 }
 .constellations-stroke-focus {
-    fill: #fbda81;
-    opacity:1;
+  fill: #fbda81;
+  opacity: 1;
 }
 .constellations-boundaries {
-    opacity : 0;
-    transition : opacity .4s ease-in-out;
-
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
 }
 .constellations-boundaries-focus {
-    stroke: #fbda81;
-    opacity:1;
+  stroke: #fbda81;
+  opacity: 1;
 }
 .constellations-name {
-    text-transform: capitalize;
-    font-variant: small-caps;
-    fill: #fff;
-    font-size: 20px;
-    font-weight:100;
-    opacity:0;
+  text-transform: capitalize;
+  font-variant: small-caps;
+  fill: #fff;
+  font-size: 20px;
+  font-weight: 100;
+  opacity: 0;
 }
 .constellations-name-focus {
-    fill: #fbda81;
+  fill: #fbda81;
 }
 .star-name {
-    fill:rgba(240,240,255,0.8);
-    font-style: italic;
-    font-weight:100;
-    font-size: 0.8em;
+  fill: rgba(240, 240, 255, 0.8);
+  font-style: italic;
+  font-weight: 100;
+  font-size: 0.8em;
 }
-.star-name:hover{
-    fill:rgba(240,240,255,0.9);
+.star-name:hover {
+  fill: rgba(240, 240, 255, 0.9);
 }

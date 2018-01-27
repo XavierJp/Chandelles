@@ -1,55 +1,58 @@
 #search-bar {
-    position:absolute;
-    top:20px;
+  position: absolute;
+  top: 20px;
 }
 
 #result-container {
-    width:440px;
-    margin-top:15px;
-    max-height:300px;
-    overflow-y: auto;
+  width: 440px;
+  margin-top: 15px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .result-item {
-    padding:20px 20px;
-    font-weight: 100;
-    font-size: 1.2em;
-    color: #bbb;
-    background: rgba(16, 32, 58, 0.86);
-    border: 1px solid rgba(0,0,0,0.1);
-    margin-bottom:3px;
-    transition: background-color 0.1s ease-in-out;
+  padding: 20px 20px;
+  font-weight: 100;
+  font-size: 1.2em;
+  color: #bbb;
+  background: rgba(16, 32, 58, 0.86);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 3px;
+  transition: background-color 0.1s ease-in-out;
 }
 
 .result-item:hover {
-    background-color:rgba(12, 24, 44, 0.9);
-    color:#ccc;
+  background-color: rgba(12, 24, 44, 0.9);
+  color: #ccc;
 }
 
-input[type="text"] {
-    width:400px;
-    font-weight: 100;
-    font-size: 1.5em;
+input[type='text'] {
+  width: 400px;
+  font-weight: 100;
+  font-size: 1.5em;
 
-    background-color:rgba(0,0,0,0.2);
-    padding:15px 20px;
-    margin-top: 10px;
-    color: #ccc;
-    font-family: -apple-system, BlinkMacSystemFont,'Helvetica Neue','Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',sans-serif;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 15px 20px;
+  margin-top: 10px;
+  color: #ccc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    sans-serif;
 
-
-    border:none;
-    outline:none;
-    text-shadow: none;
-    border-radius: 40px;
-    transition: background-color 0.3s ease-in-out;
+  border: none;
+  outline: none;
+  text-shadow: none;
+  border-radius: 40px;
+  transition: background-color 0.3s ease-in-out;
 }
-input[placeholder], [placeholder], *[placeholder] {
-    color: #ddd;
+input[placeholder],
+[placeholder],
+*[placeholder] {
+  color: #ddd;
 }
 
-input[type="text"]:focus {
-    border:none;
-    background-color:rgba(10,32,52,0.8);
-    outline:none;
+input[type='text']:focus {
+  border: none;
+  background-color: rgba(10, 32, 52, 0.8);
+  outline: none;
 }
