@@ -270,8 +270,139 @@ const skyFactory = (hook, onEvents) => {
       .style('font-size', `${fontBaseSize / sky.getScale()}px`);
   };
 
+  sky.selectConstellation = (constellationId) => {
+    let id;
+
+    if (constellationId === sky.state.selectedConstellation) return;
+
+    if (constellationId !== undefined) {
+      const constellation = data.getSkyElementById(constellationId);
+      sky.zoomOnConstellation(constellation.boundaries);
+      id = constellation.id;
+    }
+
+    sky.focusOnConstellation(id);
+
+    if (sky.onEvents.onConstellationSelected) {
+      sky.onEvents.onConstellationSelected(id);
+    }
+  }
+
+  // draw the chart
+  sky.draw = () => {
+      // === graticule ===
+    sky.mapLayer
+      .append('path')
+      .datum(sky.graticule)
+      .attr('class', 'graticule')
+      .attr('d', sky.path);
+
+    // === constellation as a path ===
+    sky.mapLayer
+      .selectAll('.constellations-stroke')
+      .data(data.constellations.strokes.features)
+      .enter()
+      .append('path')
+      .attr('class', 'constellations-stroke pointer')
+      .attr('id', (d) => `constellations-stroke-${d.id}`)
+      .attr('d', sky.path)
+      .attr('vector-effect', 'non-scaling-stroke')
+      .style('stroke', 'rgba(110,200,255,0.45)')
+      .style('fill', 'none');
+
+    // === Invisible boundaries used for selection ===
+    sky.mapLayer
+      .selectAll('.constellations-boundaries')
+      .data(data.constellations.boundaries.features)
+      .enter()
+      .append('path')
+      .attr('class', 'constellations-boundaries pointer')
+      .attr('id', (d) => `constellations-boundaries-${d.id}`)
+      .attr('d', sky.path)
+      .attr('vector-effect', 'non-scaling-stroke')
+      .style('stroke', 'rgba(253, 186, 129, 0.5)')
+      .style('fill', 'rgba(44, 161, 255, 0.07)')
+      .style('display', (d) => {
+        const bnds = sky.path.bounds(d);
+        if (
+          bnds[1][0] - bnds[0][0] > sky.width &&
+          bnds[1][1] - bnds[0][1] > sky.height
+        ) {
+          return 'none';
+        }
+        return 'initial';
+      })
+      .on('click', (d) => {
+        sky.selectConstellation(d.id);
+      })
+      .on('mouseover', (d) => {
+        if (d.id !== sky.state.selectedConstellation) {
+          sky.highlightConstellation(d.id, true, true);
+        }
+      })
+      .on('mouseleave', (d) => {
+        if (d.id !== sky.state.selectedConstellation) {
+          sky.highlightConstellation(d.id, false, true);
+        }
+      });
+
+    // === Constellation names ===
+    sky.mapLayer
+      .selectAll('.constellations-name')
+      .data(data.constellations.infos.features)
+      .enter()
+      .append('text')
+      .attr('vector-effect', 'non-scaling-stroke')
+      .attr('x', (d) => sky.projection(d.geometry.coordinates)[0])
+      .attr('y', (d) => sky.projection(d.geometry.coordinates)[1])
+      .text((d) => d.properties.name)
+      .attr('class', 'constellations-name pointer')
+      .attr('id', (d) => `constellations-name-${d.id}`)
+      .on('click', (d) => sky.selectConstellation(d.id))
+      .on('mouseover', (d) => {
+        if (d.id !== sky.state.selectedConstellation) {
+          sky.highlightConstellation(d.id, true, true);
+        }
+      })
+      .on('mouseleave', (d) => {
+        if (d.id !== sky.state.selectedConstellation) {
+          sky.highlightConstellation(d.id, false, true);
+        }
+      });
+
+    // === Stars ===
+    sky.mapLayer
+      .selectAll('.stars')
+      .data(data.stars.features)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => sky.projection(d.geometry.coordinates)[0])
+      .attr('cy', (d) => sky.projection(d.geometry.coordinates)[1])
+      .attr('r', (d) => 1 / Math.exp(Number(d.properties.mag + 2) / 4) + 'px')
+      .attr('fill', '#c7f5ff')
+      .attr('class', 'stars');
+
+    // === Stars name ===
+    sky.mapLayer
+      .selectAll('.star-name')
+      .data(data.stars.features.filter((c) => c.properties.name !== ''))
+      .enter()
+      .append('text')
+      .attr('vector-effect', 'non-scaling-stroke')
+      .attr('x', (d) => sky.projection(d.geometry.coordinates)[0] + 1)
+      .attr('y', (d) => sky.projection(d.geometry.coordinates)[1] - 1)
+      .text((d) => d.properties.name)
+      .attr(
+        'class',
+        (d) => `star-name star-constellation-name-${d.properties.con}`,
+      )
+      .style('display', 'none')
+      .attr('id', (d) => `star-name-${d.id}`);
+  }
+
   return sky;
 };
+
 
 const d3ChartFactory = (hook, opts) => {
   // d3 object
@@ -282,120 +413,15 @@ const d3ChartFactory = (hook, opts) => {
     isCentered: () => sky.state.centered,
     // call to recenter the sky - if deselect any selected constellation
     reCenter: () => {
-      if (sky.state.selectedConstellation) d3Chart.selectConstellation();
+      if (sky.state.selectedConstellation) {
+        d3Chart.selectConstellation()
+      }
 
       sky.reCenter();
     },
     // call to draw chart == bind the data to the DOM
     draw: () => {
-      // === graticule ===
-      sky.mapLayer
-        .append('path')
-        .datum(sky.graticule)
-        .attr('class', 'graticule')
-        .attr('d', sky.path);
-
-      // === onstellation as a path ===
-      sky.mapLayer
-        .selectAll('.constellations-stroke')
-        .data(data.constellations.strokes.features)
-        .enter()
-        .append('path')
-        .attr('class', 'constellations-stroke pointer')
-        .attr('id', (d) => `constellations-stroke-${d.id}`)
-        .attr('d', sky.path)
-        .attr('vector-effect', 'non-scaling-stroke')
-        .style('stroke', 'rgba(110,200,255,0.45)')
-        .style('fill', 'none');
-
-      // === Invisible boundaries used for selection ===
-      sky.mapLayer
-        .selectAll('.constellations-boundaries')
-        .data(data.constellations.boundaries.features)
-        .enter()
-        .append('path')
-        .attr('class', 'constellations-boundaries pointer')
-        .attr('id', (d) => `constellations-boundaries-${d.id}`)
-        .attr('d', sky.path)
-        .attr('vector-effect', 'non-scaling-stroke')
-        .style('stroke', '#fdba81')
-        .style('fill', 'rgba(0,0,0,0)')
-        .style('display', (d) => {
-          const bnds = sky.path.bounds(d);
-          if (
-            bnds[1][0] - bnds[0][0] > sky.width &&
-            bnds[1][1] - bnds[0][1] > sky.height
-          ) {
-            return 'none';
-          }
-          return 'initial';
-        })
-        .on('click', (d) => {
-          d3Chart.selectConstellation(d.id);
-        })
-        .on('mouseover', (d) => {
-          if (d.id !== sky.state.selectedConstellation) {
-            sky.highlightConstellation(d.id, true, true);
-          }
-        })
-        .on('mouseleave', (d) => {
-          if (d.id !== sky.state.selectedConstellation) {
-            sky.highlightConstellation(d.id, false, true);
-          }
-        });
-
-      // === Constellation names ===
-      sky.mapLayer
-        .selectAll('.constellations-name')
-        .data(data.constellations.infos.features)
-        .enter()
-        .append('text')
-        .attr('vector-effect', 'non-scaling-stroke')
-        .attr('x', (d) => sky.projection(d.geometry.coordinates)[0])
-        .attr('y', (d) => sky.projection(d.geometry.coordinates)[1])
-        .text((d) => d.properties.name)
-        .attr('class', 'constellations-name pointer')
-        .attr('id', (d) => `constellations-name-${d.id}`)
-        .on('click', (d) => d3Chart.selectConstellation(d.id))
-        .on('mouseover', (d) => {
-          if (d.id !== sky.state.selectedConstellation) {
-            sky.highlightConstellation(d.id, true, true);
-          }
-        })
-        .on('mouseleave', (d) => {
-          if (d.id !== sky.state.selectedConstellation) {
-            sky.highlightConstellation(d.id, false, true);
-          }
-        });
-
-      // === Stars ===
-      sky.mapLayer
-        .selectAll('.stars')
-        .data(data.stars.features)
-        .enter()
-        .append('circle')
-        .attr('cx', (d) => sky.projection(d.geometry.coordinates)[0])
-        .attr('cy', (d) => sky.projection(d.geometry.coordinates)[1])
-        .attr('r', (d) => 1 / Math.exp(Number(d.properties.mag + 2) / 4) + 'px')
-        .attr('fill', '#c7f5ff')
-        .attr('class', 'stars');
-
-      // === Stars name ===
-      sky.mapLayer
-        .selectAll('.star-name')
-        .data(data.stars.features.filter((c) => c.properties.name !== ''))
-        .enter()
-        .append('text')
-        .attr('vector-effect', 'non-scaling-stroke')
-        .attr('x', (d) => sky.projection(d.geometry.coordinates)[0] + 1)
-        .attr('y', (d) => sky.projection(d.geometry.coordinates)[1] - 1)
-        .text((d) => d.properties.name)
-        .attr(
-          'class',
-          (d) => `star-name star-constellation-name-${d.properties.con}`,
-        )
-        .style('display', 'none')
-        .attr('id', (d) => `star-name-${d.id}`);
+      sky.draw();
     },
     // call to zoom
     zoom: (scale, lat, lng) => {
@@ -417,21 +443,7 @@ const d3ChartFactory = (hook, opts) => {
     move: undefined,
     // call to select a constellation by its id
     selectConstellation: (constellationId) => {
-      let id;
-
-      if (constellationId === sky.state.selectedConstellation) return;
-
-      if (constellationId !== undefined) {
-        const constellation = data.getSkyElementById(constellationId);
-        sky.zoomOnConstellation(constellation.boundaries);
-        id = constellation.id;
-      }
-
-      sky.focusOnConstellation(id);
-
-      if (sky.onEvents.onConstellationSelected) {
-        sky.onEvents.onConstellationSelected(id);
-      }
+      sky.selectConstellation(constellationId);
     },
     // call to select a star by its id
     selectStar: undefined,

@@ -47,7 +47,7 @@ const SearchResultContainer = (props) => {
         {
             props.results.map(result=> {
                 return <SearchResultItem
-                        key={result.descr}
+                        key={`${result.name.trim()}-${result.id}`}
                         select={()=>props.select(result.id)}
                         result={result} />
             })
@@ -56,7 +56,7 @@ const SearchResultContainer = (props) => {
 }
 
 const SearchResultItem = (props) => {
-    return <div className="result-item pointer" onClick={props.select}>{props.result.descr}</div>
+    return <div className="result-item pointer" onClick={props.select}>{props.result.name}</div>
 }
 
 export default SearchBar;

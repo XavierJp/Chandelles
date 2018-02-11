@@ -68,7 +68,7 @@ const dataFactory = () => {
             const searchItem = item.toLowerCase();
 
             return resultsForSearch.reduce((acc, el)=> {
-                if(el.descr.toLowerCase().indexOf(searchItem) >= 0)
+                if(el.name.toLowerCase().indexOf(searchItem) >= 0)
                     acc.push(el);
                 return acc;
             }, []);
