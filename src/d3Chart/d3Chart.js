@@ -49,12 +49,13 @@ const skyFactory = (hook, onEvents) => {
     svg: d3.select(hook).append('svg'),
     onEvents, // lifecycle
   };
+
   //    var projection = d3.geoOrthographic()
   sky.projection = d3
     .geoStereographic()
     .scale(400)
     .center([0, 0])
-    .rotate([-2.34, -48.8])
+    .rotate([0,0])
     .translate([sky.width / 2, sky.height / 2]);
 
   sky.mapLayer = sky.svg.append('g').classed('map-layer', true);
@@ -79,7 +80,6 @@ const skyFactory = (hook, onEvents) => {
         y: d3.event.y,
       },
     };
-
     sky.transformSky(oldState, newState);
   };
 
@@ -99,6 +99,18 @@ const skyFactory = (hook, onEvents) => {
   sky.isSelectedConstellation = (id) => sky.state.selectedConstellation === id;
 
   sky.isCentered = () => sky.state.centered;
+
+
+  sky.isVisible = (d) => {
+    const bnds = sky.path.bounds(d);
+    if (
+      bnds[1][0] - bnds[0][0] > sky.width &&
+      bnds[1][1] - bnds[0][1] > sky.height
+    ) {
+      return false;
+    }
+    return true;
+  }
 
   // === sky manipulation functions ===
 
@@ -161,7 +173,7 @@ const skyFactory = (hook, onEvents) => {
       .style('opacity', sky.isCentered() ? 1 : 0);
   };
 
-  // zoom the whole sky on a constellation using its boundarie box
+  // zoom the whole sky on a constellation using its boundary box
   sky.zoomOnConstellation = (constellationBoundaries) => {
     if (constellationBoundaries === undefined) {
       sky.reCenter();
@@ -250,7 +262,7 @@ const skyFactory = (hook, onEvents) => {
     }
   };
 
-  // display / hide a constellation's stars
+  // display / hide a constellation's stars name
   sky.displayConstellationStars = (constName, show) => {
     const selector = `.star-constellation-name-${constName}`;
     sky.scaleFonts(selector, 20);
@@ -313,7 +325,7 @@ const skyFactory = (hook, onEvents) => {
     // === Invisible boundaries used for selection ===
     sky.mapLayer
       .selectAll('.constellations-boundaries')
-      .data(data.constellations.boundaries.features)
+      .data(data.constellations.boundaries.features.filter(sky.isVisible))
       .enter()
       .append('path')
       .attr('class', 'constellations-boundaries pointer')
@@ -322,16 +334,6 @@ const skyFactory = (hook, onEvents) => {
       .attr('vector-effect', 'non-scaling-stroke')
       .style('stroke', 'rgba(253, 186, 129, 0.5)')
       .style('fill', 'rgba(44, 161, 255, 0.07)')
-      .style('display', (d) => {
-        const bnds = sky.path.bounds(d);
-        if (
-          bnds[1][0] - bnds[0][0] > sky.width &&
-          bnds[1][1] - bnds[0][1] > sky.height
-        ) {
-          return 'none';
-        }
-        return 'initial';
-      })
       .on('click', (d) => {
         sky.selectConstellation(d.id);
       })
@@ -378,14 +380,14 @@ const skyFactory = (hook, onEvents) => {
       .append('circle')
       .attr('cx', (d) => sky.projection(d.geometry.coordinates)[0])
       .attr('cy', (d) => sky.projection(d.geometry.coordinates)[1])
-      .attr('r', (d) => 1 / Math.exp(Number(d.properties.mag + 2) / 4) + 'px')
+      .attr('r', (d) => 1 / Math.log10(Number(d.properties.mag)+1.5)/5 + 'px')
       .attr('fill', '#c7f5ff')
       .attr('class', 'stars');
 
     // === Stars name ===
     sky.mapLayer
       .selectAll('.star-name')
-      .data(data.stars.features.filter((c) => c.properties.name !== ''))
+      .data(data.stars.features.filter((c) => c.properties.name !== '').filter(sky.isVisible))
       .enter()
       .append('text')
       .attr('vector-effect', 'non-scaling-stroke')

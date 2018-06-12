@@ -5,6 +5,8 @@
   right: 50px;
   font-size: 0.9em;
   font-weight: 100;
+  border-radius: 7px;
+  box-shadow: 0px 15px 60px -5px #00000073;
 
   color: #ccc;
     animation: translateFromRight 0.2s ease-in-out;

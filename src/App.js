@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import InfoPane from './components/infoPane/infoPane'
-import SearchBar from './components/searchBar/searchBar'
+import SearchBar from './components/search/searchBar'
 
 import d3ChartFactory from './d3Chart/d3Chart';
 import xhrFactory from './utils/xhr';
@@ -21,7 +21,8 @@ import dataFactory from './resources/data';
 
 const FETCHING = 'fetching data from wikipedia...';
 const ERROR = 'Cannot find element on wikipedia.';
-const WIKI_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const WIKI_URL_SUMMARY = 'https://en.wikipedia.org/api/rest_v1/page/summary/';
+const WIKI_URL_MAIN = 'https://en.wikipedia.org/wiki/';
 
 /**
 * APP is the main react component and the only one with a state
@@ -38,7 +39,9 @@ class App extends Component {
             chart: undefined,
             chartCentered : true,
             content : FETCHING,
-            searchResults : []
+            searchResults : [],
+            lat: 0,
+            lng: 0,
         };
 
         this.searchElement = this.searchElement.bind(this);
@@ -52,12 +55,13 @@ class App extends Component {
         }
 
         const wikiXhr = xhrFactory();
-        const url = WIKI_URL+constellation.name+'_(constellation)';
+        const urlSummary = `${WIKI_URL_SUMMARY}${constellation.name}_(constellation)`;
+        const targetUrl = `${WIKI_URL_MAIN}${constellation.name}_(constellation)`;
 
-        wikiXhr.init(url)
+        wikiXhr.init(urlSummary)
             .send()
             .then(
-                (response)=>this.setState({content : JSON.parse(response).extract}),
+                (response)=>this.setState({content : JSON.parse(response).extract, targetUrl:targetUrl}),
                 (error)=> this.setState({content : ERROR})
             )
     }
@@ -90,6 +94,11 @@ class App extends Component {
                 this.state.chart.draw(this.state.chartState);
             }
         );
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => this.setState({lat:position.coords.latitude,
+                lng:position.coords.longitude}),
+            (err)=>console.log(err))
     }
 
     render() {
@@ -104,7 +113,8 @@ class App extends Component {
                     <InfoPane
                         selectedItem={this.state.selectedConstellation}
                         deSelect={()=>this.state.chart.selectConstellation()}
-                        content={this.state.content}/>
+                        content={this.state.content}
+                        targetUrl={this.targetUrl}/>
                 }
                 <Location />
                 { this.state.chart &&  !this.state.chartCentered &&

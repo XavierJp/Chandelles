@@ -13,7 +13,11 @@ const InfoPane = (props) => {
                 <span onClick={props.deSelect} id="info-pane-kill" className="pointer spin-hover">&#9587;</span>
             </div>
             <div id="info-pane-content">
-                {props.content}
+                <div id="info-pane-star-list"></div>
+                <div id="info-pane-desciption">{props.content}</div>
+                { props.link &&
+                    <a id="info-pane-link" href={props.link}>full article</a>
+                }
             </div>
         </div>
     );
