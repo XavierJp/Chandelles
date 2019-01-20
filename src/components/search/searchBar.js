@@ -1,6 +1,5 @@
 import React, { Fragment, Component } from 'react';
 import './searchBar.css';
-import { timeout } from 'd3-timer';
 
 /**
 * Search bar
@@ -10,7 +9,10 @@ class SearchBar extends Component {
         super();
 
         this.textInput = '';
-        this.state = {open:false};
+        this.state = {
+            opened:false, 
+            preOpened:false,
+        };
     }
 
     selectAndClearInput = (id) => {
@@ -28,21 +30,33 @@ class SearchBar extends Component {
 
     selfOpen = (e) => {
         e.stopPropagation();
-        //this.searchBar.classList.add('active');
-        this.openAimation();
-        setTimeout(()=>this.resultPane.classList.add('active'), 100);
-        //this.searchBar.addEventListener('mouseDown', this.stopProp);          
-        //this.resultPane.addEventListener('mouseDown', this.stopProp);          
-        window.addEventListener('mouseDown', this.selfClose); 
+        if (this.state.opened) {
+            return;
+        }
+        this.setState({opened:true},
+            ()=> {
+                console.log('open')
+                this.animateOpen();
+                this.searchBar.addEventListener('click', this.stopProp);          
+                this.resultPane.addEventListener('click', this.stopProp);          
+                window.addEventListener('click', () => this.selfClose()); 
+            }
+        )
     }
     
     selfClose = (e) => {
-        this.resultPane.classList.remove('active');
-        setTimeout(()=>this.searchBar.classList.remove('active'), 100);
-        window.removeEventListener('mouseDown', this.selfClose);  
-        this.searchBar.removeEventListener('mouseDown', this.stopProp);          
-        this.resultPane.removeEventListener('mouseDown', this.stopProp); 
-        
+        console.log('hey')
+        if (!this.state.opened) {
+            return;
+        }
+        this.setState({opened:false},
+            ()=> {
+                this.animateClose();
+                //this.searchBar.addEventListener('mouseDown', this.stopProp);          
+                //this.resultPane.addEventListener('mouseDown', this.stopProp);          
+                window.addEventListener('click', this.selfClose); 
+            }
+        )
     }
 
     stopProp = (e) => {
@@ -52,40 +66,150 @@ class SearchBar extends Component {
     }
 
     selfPreActivate = () => {
-        //this.searchBar.classList.add('pre-active');
+        if (!this.state.preOpened && !this.state.opened) {
+            this.setState({preOpened:true},
+               () => this.searchBar.classList.add('pre-active')
+            )
+        }
     }
 
     selfDeActivate = () => {
-            this.searchBar.classList.remove('pre-active');
+        if (this.state.preOpened && !this.state.opened) {
+            this.setState({preOpened:false},
+               () => this.searchBar.classList.remove('pre-active')
+            )
+        }
     }
 
-    openAimation = () => {
+    animateOpen = () => {
         this.searchBar.animate(
         [{
             left:'-220px',
-            borderRadius:'40px',
         },
         {
             left:'10px',
-            borderRadius:'5px',
         }], 
         {
-            duration:200, 
+            duration:150, 
             fill:'forwards',
-            easing:'ease-out',
+            easing:'ease-in-out',
         });
+        this.searchBar.animate(
+            [{
+                borderRadius:'40px',
+                backgroundColor:'rgba(0,0,0,0.3)',
+            },
+            {
+                borderRadius:'5px',
+                backgroundColor:'rgba(0, 0, 0, 0.6)',
+            }], 
+            {
+                duration:400, 
+                fill:'forwards',
+                easing:'ease-out',
+                delay:150,
+            });
+        this.textInput.animate(
+            [{
+                visibility:'hidden',
+                opacity:0,
+            },
+            {
+                visibility:'visible',
+                opacity:1
+            }], 
+            {
+                duration:200, 
+                fill:'forwards',
+                easing:'ease-out',
+                delay:550,
+            });
+
+        this.resultPane.animate(
+            [{
+                opacity:0,
+            },
+            {
+                opacity:1,
+            }], 
+            {
+                duration:600, 
+                delay:200,
+                fill:'forwards',
+                easing:'ease-out',
+            });
         setTimeout(()=>{
             this.searchBar.style.background='transparent';
-            this.textInput.style.visibility= 'visible';
-        },200)
+        },550)
     }
+    animateClose = () => {
+        this.searchBar.animate(
+            [{
+                left:'10px',
+            },
+            {
+                left:'-220px',
+            }], 
+            {
+                duration:150,
+                delay:50, 
+                fill:'forwards',
+                easing:'ease-in-out',
+            });
+            this.searchBar.animate(
+                [{
+                    borderRadius:'5px',
+                    backgroundColor:'rgba(0, 0, 0, 0.6)',
+                },
+                {
+                    borderRadius:'40px',
+                    backgroundColor:'rgba(0,0,0,0.3)',
+                }], 
+                {
+                    duration:150, 
+                    fill:'forwards',
+                    easing:'ease-out',
+                });
+            this.textInput.animate(
+                [{
+                    visibility:'visible',
+                    opacity:1
+                },
+                {
+                    visibility:'hidden',
+                    opacity:0,
+                }], 
+                {
+                    duration:150, 
+                    fill:'forwards',
+                    easing:'ease-out',
+                });
+    
+            setTimeout(()=>{
+                this.searchBar.style.background='initial';
+            },150);
 
+            this.resultPane.animate(
+                [{
+                    opacity:1,
+                },
+                {
+                    opacity:0,
+                }], 
+                {
+                    duration:150, 
+                    delay:0,
+                    fill:'forwards',
+                    easing:'ease-out',
+                });
+    }
 
     render() {
         const { results, search } = this.props;
         return (
             <Fragment
             >
+                <span onClick={this.selfClose} className="cross spin-hover">&#9587;</span>
                 <div 
                 className="search-bar" 
                 ref={bar=> this.searchBar = bar} 
@@ -104,7 +228,7 @@ class SearchBar extends Component {
                     <SearchResultContainer select={this.selectAndClearInput} results={results}/>
                 }
                 </div>
-                </Fragment>
+            </Fragment>
         );
     }
 }
@@ -136,5 +260,6 @@ const SearchResultContainer = (props) => {
 const SearchResultItem = (props) => {
     return <div className="result-item pointer" onClick={props.select}>{props.result.name}</div>
 }
+
 
 export default SearchBar;

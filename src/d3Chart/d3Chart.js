@@ -50,12 +50,16 @@ const skyFactory = (hook, onEvents) => {
     onEvents, // lifecycle
   };
 
+  sky.rotateScale = d3.scaleLinear()
+  .domain([-500, 0, 500])
+  .range([-180, 0, 180]);
+
   //    var projection = d3.geoOrthographic()
   sky.projection = d3
     .geoStereographic()
-    .scale(400)
-    .center([0, 0])
-    .rotate([0,0])
+    .scale(800)
+    .center([0,0])
+    .rotate([2,-48])
     .translate([sky.width / 2, sky.height / 2]);
 
   sky.mapLayer = sky.svg.append('g').classed('map-layer', true);
@@ -91,8 +95,7 @@ const skyFactory = (hook, onEvents) => {
   sky.svg
     .attr('width', sky.width)
     .attr('height', sky.height)
-    .call(drag);
-  // .call(d3.zoom().on('zoom', d3Chart.zoom)) zoom deactivated for now
+    .call(drag)
 
   sky.path = d3.geoPath().projection(sky.projection);
 
@@ -119,7 +122,7 @@ const skyFactory = (hook, onEvents) => {
     let coordinates = coords;
     let scale = s;
 
-    if (coords.length === 0 || coords === undefined) {
+    if (!coords || coords.length === 0) {
       coordinates = [sky.getX(), sky.getY()];
     }
 
@@ -138,7 +141,6 @@ const skyFactory = (hook, onEvents) => {
 
   // low level transformation (translate and scale)
   sky.transformSky = (oldState, newState, durationTime) => {
-    let transformStr = '';
 
     if (oldState === undefined) {
       oldState = sky.skyStateFactory();
@@ -152,26 +154,45 @@ const skyFactory = (hook, onEvents) => {
       const X = newState.coords.x - oldState.coords.x;
       const Y = newState.coords.y - oldState.coords.y;
       sky.state.coords = { x: X, y: Y };
-      transformStr += `translate(${X},${Y})`;
+      
+      const currentRotateX = sky.rotateScale(X) % 360
+      //const currentRotateY = sky.rotateScale(-Y) % 360
+      const currentRotateY = 0
+  
+      sky.state.scale = newState.scale;
+  
+      sky.projection.rotate([currentRotateX+2, currentRotateY-48])
+  
+      sky.draw()
     }
-
-    transformStr += `scale(${newState.scale})`;
-    sky.state.scale = newState.scale;
-
-    if (durationTime && durationTime > 0) {
-      sky.mapLayer
-        .transition()
-        .duration(durationTime)
-        .attr('transform', transformStr);
-    } else {
-      sky.mapLayer.attr('transform', transformStr);
-    }
-
-    // display graticule if canvas is centered
-    sky.mapLayer
-      .selectAll('.graticule')
-      .style('opacity', sky.isCentered() ? 1 : 0);
   };
+
+  var mapZoom = d3.zoom()
+   .on("zoom", sky.zoom)
+   
+     var zoomSettings = d3.zoomIdentity
+       .translate(0, 0)
+       .scale(200)
+
+   sky.svg
+  .call(mapZoom)
+  .call(mapZoom.transform, zoomSettings)
+
+  sky.zoom = (e) => {
+    console.log('hey')
+    if(d3.event.sourceEvent.type === "wheel") {
+      const targetScaleRatio = d3.event.sourceEvent.deltaY > 0 ? 1.01 : 0.99;
+
+      const x = sky.width/2 - d3.event.sourceEvent.screenX*sky.getScale()*targetScaleRatio;
+      const y =sky.height/2- d3.event.sourceEvent.screenY*sky.getScale()*targetScaleRatio;
+    
+      sky.projection
+        .rotate([sky.rotateScale(x), sky.rotateScale(y)])
+        .scale(sky.getScale()*targetScaleRatio)
+  
+      sky.draw();
+    }
+  }
 
   // zoom the whole sky on a constellation using its boundary box
   sky.zoomOnConstellation = (constellationBoundaries) => {
@@ -182,14 +203,14 @@ const skyFactory = (hook, onEvents) => {
 
     const centroid = sky.path.centroid(constellationBoundaries);
     const bnds = sky.path.bounds(constellationBoundaries);
-    const targetScale = Math.min(
+    let targetScale = Math.min(
       sky.width * 0.5 / (bnds[1][0] - bnds[0][0]),
       sky.height * 0.8 / (bnds[1][1] - bnds[0][1]),
     );
     sky.state.centered = false;
 
     sky.move(
-      sky.width / (sky.state.centered ? 2 : 3) - centroid[0] * targetScale,
+      sky.width / 2 - centroid[0] * targetScale,
       sky.height / 2 - centroid[1] * targetScale,
       targetScale,
       constants.transitions.constellations,
@@ -300,40 +321,49 @@ const skyFactory = (hook, onEvents) => {
     }
   }
 
+  sky.mapLayer
+    .append('path')
+    .datum(sky.graticule)
+    .attr('class', 'graticule')
+    .attr('d', sky.path);
+
   // draw the chart
   sky.draw = () => {
       // === graticule ===
-    sky.mapLayer
-      .append('path')
-      .datum(sky.graticule)
-      .attr('class', 'graticule')
+      sky.mapLayer
+      .selectAll('.graticule')
       .attr('d', sky.path);
 
     // === constellation as a path ===
-    sky.mapLayer
+    const constellationStrokes = sky.mapLayer
       .selectAll('.constellations-stroke')
-      .data(data.constellations.strokes.features)
+      .data(data.constellations.strokes.features);
+
+    constellationStrokes
       .enter()
       .append('path')
       .attr('class', 'constellations-stroke pointer')
-      .attr('id', (d) => `constellations-stroke-${d.id}`)
-      .attr('d', sky.path)
       .attr('vector-effect', 'non-scaling-stroke')
       .style('stroke', 'rgba(110,200,255,0.45)')
-      .style('fill', 'none');
+      .style('fill', 'none')
+      .merge(constellationStrokes)
+      .attr('id', (d) => `constellations-stroke-${d.id}`)
+      .attr('d', sky.path)
 
     // === Invisible boundaries used for selection ===
-    sky.mapLayer
+    const constelationBoundaries = sky.mapLayer
       .selectAll('.constellations-boundaries')
       .data(data.constellations.boundaries.features.filter(sky.isVisible))
-      .enter()
+      
+      constelationBoundaries.enter()
       .append('path')
       .attr('class', 'constellations-boundaries pointer')
-      .attr('id', (d) => `constellations-boundaries-${d.id}`)
-      .attr('d', sky.path)
       .attr('vector-effect', 'non-scaling-stroke')
       .style('stroke', 'rgba(253, 186, 129, 0.5)')
       .style('fill', 'rgba(44, 161, 255, 0.07)')
+      .merge(constelationBoundaries)
+      .attr('id', (d) => `constellations-boundaries-${d.id}`)
+      .attr('d', sky.path)
       .on('click', (d) => {
         sky.selectConstellation(d.id);
       })
@@ -346,60 +376,63 @@ const skyFactory = (hook, onEvents) => {
         if (d.id !== sky.state.selectedConstellation) {
           sky.highlightConstellation(d.id, false, true);
         }
-      });
-
-    // === Constellation names ===
-    sky.mapLayer
-      .selectAll('.constellations-name')
-      .data(data.constellations.infos.features)
-      .enter()
-      .append('text')
-      .attr('vector-effect', 'non-scaling-stroke')
-      .attr('x', (d) => sky.projection(d.geometry.coordinates)[0])
-      .attr('y', (d) => sky.projection(d.geometry.coordinates)[1])
-      .text((d) => d.properties.name)
-      .attr('class', 'constellations-name pointer')
-      .attr('id', (d) => `constellations-name-${d.id}`)
-      .on('click', (d) => sky.selectConstellation(d.id))
-      .on('mouseover', (d) => {
-        if (d.id !== sky.state.selectedConstellation) {
-          sky.highlightConstellation(d.id, true, true);
-        }
       })
-      .on('mouseleave', (d) => {
-        if (d.id !== sky.state.selectedConstellation) {
-          sky.highlightConstellation(d.id, false, true);
-        }
-      });
+      
+    // // === Constellation names ===
+    // sky.mapLayer
+    //   .selectAll('.constellations-name')
+    //   .data(data.constellations.infos.features)
+    //   .enter()
+    //   .append('text')
+    //   .attr('vector-effect', 'non-scaling-stroke')
+    //   .attr('x', (d) => sky.projection(d.geometry.coordinates)[0])
+    //   .attr('y', (d) => sky.projection(d.geometry.coordinates)[1])
+    //   .text((d) => d.properties.name)
+    //   .attr('class', 'constellations-name pointer')
+    //   .attr('id', (d) => `constellations-name-${d.id}`)
+    //   .on('click', (d) => sky.selectConstellation(d.id))
+    //   .on('mouseover', (d) => {
+    //     if (d.id !== sky.state.selectedConstellation) {
+    //       sky.highlightConstellation(d.id, true, true);
+    //     }
+    //   })
+    //   .on('mouseleave', (d) => {
+    //     if (d.id !== sky.state.selectedConstellation) {
+    //       sky.highlightConstellation(d.id, false, true);
+    //     }
+    //   });
 
     // === Stars ===
-    sky.mapLayer
+    const stars = sky.mapLayer
       .selectAll('.stars')
-      .data(data.stars.features)
+      .data(data.stars.features.filter(d=>d.properties.mag < 4 ));
+
+      stars
       .enter()
       .append('circle')
+      .attr('fill', '#c7f5ff')
+      .attr('class', 'stars')
+      .merge(stars)
       .attr('cx', (d) => sky.projection(d.geometry.coordinates)[0])
       .attr('cy', (d) => sky.projection(d.geometry.coordinates)[1])
-      .attr('r', (d) => 1 / Math.log10(Number(d.properties.mag)+1.5)/5 + 'px')
-      .attr('fill', '#c7f5ff')
-      .attr('class', 'stars');
+      .attr('r', (d) => 1 / Math.log10(Number(d.properties.mag)+1.1)/5 + 'px')
 
-    // === Stars name ===
-    sky.mapLayer
-      .selectAll('.star-name')
-      .data(data.stars.features.filter((c) => c.properties.name !== '').filter(sky.isVisible))
-      .enter()
-      .append('text')
-      .attr('vector-effect', 'non-scaling-stroke')
-      .attr('x', (d) => sky.projection(d.geometry.coordinates)[0] + 1)
-      .attr('y', (d) => sky.projection(d.geometry.coordinates)[1] - 1)
-      .text((d) => d.properties.name)
-      .attr(
-        'class',
-        (d) => `star-name star-constellation-name-${d.properties.con}`,
-      )
-      .style('display', 'none')
-      .attr('id', (d) => `star-name-${d.id}`);
+    // // === Stars name ===
+    // sky.mapLayer
+    //   .selectAll('.star-name')
+    //   .data(data.stars.features.filter((c) => c.properties.name !== '').filter(sky.isVisible))
+    //   .enter()
+    //   .append('text')
+    //   .attr('vector-effect', 'non-scaling-stroke')
+    //   .attr('x', (d) => sky.projection(d.geometry.coordinates)[0] + 1)
+    //   .attr('y', (d) => sky.projection(d.geometry.coordinates)[1] - 1)
+    //   .text((d) => d.properties.name)
+    //   .attr(
+    //     'class',
+    //     (d) => `star-name star-constellation-name-${d.properties.con}`,
+    //   )
+    //   .style('display', 'none')
+    //   .attr('id', (d) => `star-name-${d.id}`);
   }
 
   return sky;
@@ -427,19 +460,7 @@ const d3ChartFactory = (hook, opts) => {
     },
     // call to zoom
     zoom: (scale, lat, lng) => {
-      /** zoom currently deactivated
-            if(d3.event.sourceEvent.type === "wheel") {
-                const targetScaleRatio = d3.event.sourceEvent.deltaY > 0 ? 1.01 : 0.99;
-                const targetScale = sky.getScale() * targetScaleRatio;
-                const x = sky.width/2 - d3.event.sourceEvent.screenX*targetScale;
-                const y =sky.height/2- d3.event.sourceEvent.screenY*targetScale;
-
-                const from = sky.canvasStateFactory([0,0]);
-                const to = sky.canvasStateFactory([x,y], sky.getScale()*targetScaleRatio);
-
-                sky.transformCanvas(from,to,0, false);
-            }
-            **/
+      sky.zoom()
     },
     // call to move the whole sky
     move: undefined,
